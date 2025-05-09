@@ -12,13 +12,10 @@ pip install btok --upgrade
 
 ## Usage
 
-Run example:
+Run tests:
 
 ```sh
-python example.py
+python tests.py
 ```
 
-See: [example.py](https://github.com/Hansimov/btok/blob/main/example.py)
-
-```python
-```
+See: [tests.py](https://github.com/Hansimov/btok/blob/main/tests.py)
