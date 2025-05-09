@@ -1,12 +1,13 @@
-# pypitemp
-A template of pypi library
+# BTok
 
-![](https://img.shields.io/pypi/v/pypitemp?label=pypitemp&color=blue&cacheSeconds=60)
+A Python multilingual tokenizer trained on modern web corpus with [SentencePiece](https://github.com/google/sentencepiece).
+
+![](https://img.shields.io/pypi/v/btok?label=btok&color=blue&cacheSeconds=60)
 
 ## Install
 
 ```sh
-pip install pypitemp --upgrade
+pip install btok --upgrade
 ```
 
 ## Usage
@@ -17,7 +18,7 @@ Run example:
 python example.py
 ```
 
-See: [example.py](https://github.com/Hansimov/pypitemp/blob/main/example.py)
+See: [example.py](https://github.com/Hansimov/btok/blob/main/example.py)
 
 ```python
 ```
