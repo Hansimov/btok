@@ -4,13 +4,14 @@ from pathlib import Path
 from tclogger import logstr
 from typing import Union
 
-from .constants import CH_MASK
-from .constants import PT_NON_WORD, PT_CH_CJK, PT_ATOZ_WS
+from .constants import PT_NON_WORD
 from .constants import PT_DIGITS_ZH_WITH_UNIT, PT_DIGITS_UNITS_AND_NON_WORDS
 from .constants import PT_ATOZ, PT_ATOZ_DIGITS_WORD
 from .constants import PT_DIGITS_NUMBER, PT_ATOZ_DIGITS_NUMBER
 from .constants import PT_DIGITS_ZH_WITH_UNIT_SINGLE_CHAR
 from .constants import PT_CONCAT
+
+from .utils import mask_ws_between_atoz, replace_mask_to_ws, calc_cjk_char_len
 
 SP_MODEL_PATH = Path(__file__).parent / "sp.model"
 
@@ -35,9 +36,6 @@ class SentencePreTokenizer:
             res.append((sentence[start:], "str"))
         return res
 
-    def mask_ws_between_atoz(self, sentence: str) -> str:
-        return PT_ATOZ_WS.sub(CH_MASK, sentence)
-
     def tokenize(self, sentence: str) -> list[tuple[str, str]]:
         """Split sentence by multiple parts, non-word, digits and non-digits
         Output: list of tuple (part:str, type:str)
@@ -51,7 +49,7 @@ class SentencePreTokenizer:
             "digits_zh_with_unit",
             "non_word",
         ]
-        sentence = self.mask_ws_between_atoz(sentence)
+        sentence = mask_ws_between_atoz(sentence)
         for match in PT_DIGITS_UNITS_AND_NON_WORDS.finditer(sentence):
             for name in group_names:
                 if match.group(name):
@@ -71,9 +69,6 @@ class SentencePieceModelTokenizer:
 
     def tokenize_nbest(self, sentence: str, nbest_size: int = None) -> list[list[str]]:
         return self.sp.NBestEncodeAsPieces(sentence, nbest_size=nbest_size)
-
-    def calc_cjk_char_len(self, token: str) -> int:
-        return sum(1 for char in token if PT_CH_CJK.match(char))
 
     def tokenize_maxlen(
         self,
@@ -98,7 +93,7 @@ class SentencePieceModelTokenizer:
 
         res = []
         for token in tokens:
-            if self.calc_cjk_char_len(token) <= max_char_len:
+            if calc_cjk_char_len(token) <= max_char_len:
                 res.append(token)
             else:
                 sub_tokens = self.tokenize_maxlen(
@@ -109,7 +104,7 @@ class SentencePieceModelTokenizer:
                     combine_singles=combine_singles,
                 )
                 res.extend(sub_tokens)
-        if combine_singles and all(self.calc_cjk_char_len(token) <= 1 for token in res):
+        if combine_singles and all(calc_cjk_char_len(token) <= 1 for token in res):
             res = ["".join(res)]
         return res
 
@@ -201,7 +196,6 @@ class SentencePostTokenizer:
 
 
 class SentenceFullTokenizer:
-
     def __init__(
         self,
         model_path: Union[Path, str] = SP_MODEL_PATH,
@@ -263,15 +257,12 @@ class SentenceFullTokenizer:
     def remove_whitespaces(self, tokens: list[str]):
         return [token for token in tokens if token.strip()]
 
-    def replace_mask_to_ws(self, tokens: list[str]):
-        return [token.replace(CH_MASK, " ") for token in tokens]
-
     def clean_tokens(self, tokens: list[str]):
         if self.drop_non_word:
             tokens = self.remove_non_words(tokens)
         if self.drop_whitespace:
             tokens = self.remove_whitespaces(tokens)
-        tokens = self.replace_mask_to_ws(tokens)
+        tokens = replace_mask_to_ws(tokens)
         return tokens
 
     def tokenize(self, sentence: str) -> list[str]:
