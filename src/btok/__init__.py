@@ -4,3 +4,4 @@ from .tokenizer import (
     SentencePostTokenizer,
     SentenceFullTokenizer,
 )
+from .categorizer import SentenceCategorizer
