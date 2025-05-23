@@ -12,6 +12,7 @@ from .constants import PT_DIGITS_ZH_WITH_UNIT_SINGLE_CHAR
 from .constants import PT_CONCAT
 
 from .utils import mask_ws_between_atoz, replace_mask_to_ws, calc_cjk_char_len
+from .simplify import ChineseSimplifier
 
 SP_MODEL_PATH = Path(__file__).parent / "sp.model"
 
@@ -76,7 +77,7 @@ class SentencePieceModelTokenizer:
         max_char_len: int = None,
         level: int = 0,
         max_level: int = 5,
-        combine_singles: bool = True,
+        combine_singles: bool = False,
     ) -> list[str]:
         """Tokenize sentence to tokens with max_char_len,
         which means that, for each CJK token, its char length should be <= max_char_len.
@@ -201,17 +202,32 @@ class SentenceFullTokenizer:
         model_path: Union[Path, str] = SP_MODEL_PATH,
         drop_non_word: bool = False,
         drop_whitespace: bool = False,
+        simplify: bool = False,
         max_char_len: int = None,
         verbose: bool = False,
     ):
         self.model_path = model_path
         self.drop_non_word = drop_non_word
         self.drop_whitespace = drop_whitespace
+        self.simplify = simplify
+        self.hans_vocab = {}
         self.max_char_len = max_char_len
         self.verbose = verbose
+        self.simplifier = ChineseSimplifier()
         self.pre_tokenizer = SentencePreTokenizer()
         self.post_tokenizer = SentencePostTokenizer()
         self.model_tokenizer = SentencePieceModelTokenizer(model_path)
+
+    def preprocess_sentence(self, sentence: str) -> str:
+        """lowercase, simplify"""
+        sentence = sentence.lower()
+        if self.simplify:
+            sentence, self.hans_vocab = self.simplifier.simplify(
+                sentence, return_vocab=True
+            )
+        else:
+            self.hans_vocab = {}
+        return sentence
 
     def tokenize_parts(self, parts: list[tuple], max_char_len: int = None) -> list[str]:
         res: list[str] = []
@@ -262,11 +278,15 @@ class SentenceFullTokenizer:
             tokens = self.remove_non_words(tokens)
         if self.drop_whitespace:
             tokens = self.remove_whitespaces(tokens)
+        if self.simplify and self.hans_vocab:
+            tokens = [
+                self.simplifier.convert_back(token, self.hans_vocab) for token in tokens
+            ]
         tokens = replace_mask_to_ws(tokens)
         return tokens
 
     def tokenize(self, sentence: str) -> list[str]:
-        sentence = sentence.lower()
+        sentence = self.preprocess_sentence(sentence)
         parts = self.pre_tokenizer.tokenize(sentence)
         tokens = self.tokenize_parts(parts)
         tokens = self.post_tokenizer.concat_same_types(tokens)
