@@ -1,6 +1,7 @@
-from tclogger import logger
+from tclogger import logger, dict_to_str
 
 from src.btok.tokenizer import SentenceFullTokenizer
+from src.btok.categorizer import SentenceCategorizer
 
 TEST_SENTENCES = [
     "这次我们找到了星空摄影师@巡天者叶梓颐  ，和影视飓风、亿点点不一样两个频道一起出发拍摄2024年唯一一次日全食。",
@@ -57,20 +58,36 @@ TEST_SENTENCES = [
     "外場最速伝説と飛翔の雄鷹！髮型監一郎です！s1mple即将被新战队FaZe租借的新闻",
     "李羲承进行曲原版音乐找到了！重温欧美热歌《Once Upon A Time》经典MV",
     "GTA6新预告有哪些细节？能不能给我推荐点原神新出的角色的皮肤？",
+    "【Steam每日特惠】免费领取仰冲异界外星贸易公司，知名游戏记者爆料下周将免费赠送战地1本体，NBA2K21上架Steam，死亡搁浅四海兄弟特惠",
+    "HanLP的在线交互式演示，为生产环境带来次世代最先进的多语种自然语言处理技术。",
+    "《拳皇》(ファイターズ) (The King of Fighters '97.x v3) 是一个角色动作游戏",
+    "两分钟发布会 | 震惊！小米发布首款旗舰级芯片玄戒O1 将搭载小米15S Pro/小米Pad7 Ultra 还有小米Civi 5 Pro 还爆料了小米YU7",
 ]
 
 
 def test_full_tokenize(sentences: list[str]):
     logger.note("> Testing ...")
-    tokenizer = SentenceFullTokenizer()
-    for sentence in sentences:
-        tokens = tokenizer.tokenize(sentence)
-        pretty_tokens = tokenizer.stringify(tokens)
-        logger.file(f"  * {pretty_tokens}")
+    tokenizer = SentenceFullTokenizer(simplify=True)
+    with tokenizer.temp_max_char_len(5):
+        for sentence in sentences:
+            tokens = tokenizer.tokenize(sentence)
+            pretty_tokens = tokenizer.stringify(tokens)
+            logger.file(f"  * {pretty_tokens}")
+
+
+def test_categorizer(sentences: list[str]):
+    logger.note("> Testing ...")
+    categorizer = SentenceCategorizer()
+    for sentence in sentences[-1:]:
+        token_infos = categorizer.categorize(sentence)
+        token_infos = categorizer.break_cjk(token_infos)
+        token_infos = categorizer.ngramize(token_infos, ngram_size=2)
+        logger.file(dict_to_str(token_infos, add_quotes=True), indent=2)
 
 
 if __name__ == "__main__":
     test_full_tokenize(TEST_SENTENCES)
+    # test_categorizer(TEST_SENTENCES)
 
 
 # python tests.py
