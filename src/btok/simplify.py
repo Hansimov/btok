@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 from typing import Union
 
+PARENT_DIR = Path(__file__).parent
+
 
 class ChineseSimplifier:
     """Convert Chinese traditional to simplified.
@@ -10,7 +12,7 @@ class ChineseSimplifier:
     https://github.com/gumblex/zhconv/blob/master/zhconv/zhcdict.json"""
 
     def __init__(self):
-        self.dict_path = Path(__file__).parent / "zh.json"
+        self.dict_path = PARENT_DIR / "zh.json"
         self.load_dict()
 
     def load_dict(self):
@@ -23,6 +25,12 @@ class ChineseSimplifier:
     def remove_same_key_val(self, data_dict: dict):
         """Remove items with same key and value."""
         return {k: v for k, v in data_dict.items() if k != v}
+
+    def dump_dict(self, out_path: Union[str, Path]):
+        """Dump the traditional-simplified dictionary to a json file."""
+        out_path = Path(out_path)
+        with open(out_path, "w", encoding="utf-8") as wf:
+            json.dump(self.zh2hans_dict, wf, ensure_ascii=False, indent=4)
 
     def contain_traditional(self, sentence: str) -> bool:
         """Check if sentence contains any traditional char.
@@ -73,3 +81,16 @@ class ChineseSimplifier:
             else:
                 res.append(ch)
         return "".join(res)
+
+
+def test_dump_dict():
+    """Dump the traditional-simplified dictionary to a json file."""
+    simplifier = ChineseSimplifier()
+    output_path = PARENT_DIR / "zh2hans_reduced.json"
+    simplifier.dump_dict(output_path)
+
+
+if __name__ == "__main__":
+    test_dump_dict()
+
+    # python -m src.btok.simplify

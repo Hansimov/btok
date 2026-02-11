@@ -62,13 +62,19 @@ TEST_SENTENCES = [
     "HanLP的在线交互式演示，为生产环境带来次世代最先进的多语种自然语言处理技术。",
     "《拳皇》(ファイターズ) (The King of Fighters '97.x v3) 是一个角色动作游戏",
     "两分钟发布会 | 震惊！小米发布首款旗舰级芯片玄戒O1 将搭载小米15S Pro/小米Pad7 Ultra 还有小米Civi 5 Pro 还爆料了小米YU7",
+    "DeepSeek-R1，是幻方量化旗下AI公司深度求索（DeepSeek）研发的推理模型。采用强化学习进行后训练，旨在提升推理能力，尤其擅长数学、代码和自然语言推理等复杂任务",
+    "Mamba是2023年提出的神经网络架构，在语言建模上性能超越 Transformer。视频从线性 RNN 的角度解析其原理，无需复杂的状态空间模型理论",
+    "張靚穎/摩登兄弟劉宇寧- 九萬字『我也算萬種風情實非良人，誰能有幸錯付終身，最先動情的人剝去利刃淪為人臣",
+    "黄杨钿甜（2007年7月9日—），四川荥经人，出生于广东深圳，中国内地女演员。父亲曾是公务员。2017年6月，因在古装剧《楚乔传》饰演女主人公楚乔的童年时期而受到关注",
+    "《为有暗香来》是由欢娱影视出品、优酷联合出品，任亚南（七月荔）担任编剧。香药世家的督管之女华浅（周也饰），曾经因执迷于不爱自己的仲夜阑（彭楚粤饰）而做下了错事，兜兜转转下最终实现了自我与家人朋友的双向救赎",
+    "尼尔·布坎南（英语：Neil Buchanan，1956年10月11日—），是英国电视节目主持人、音乐家，以1990年至2007年在CITV主持《艺术创想》节目而广为人知",
 ]
 
 
 def test_full_tokenize(sentences: list[str]):
     logger.note("> Testing ...")
     tokenizer = SentenceFullTokenizer(simplify=True)
-    with tokenizer.temp_max_char_len(5):
+    with tokenizer.temp_max_char_len(6):
         for sentence in sentences:
             tokens = tokenizer.tokenize(sentence)
             pretty_tokens = tokenizer.stringify(tokens)
